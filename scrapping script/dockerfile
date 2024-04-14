@@ -10,16 +10,10 @@ RUN apt-get -y update
 RUN apt-get install -y google-chrome-stable
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY script/ /app/
 COPY .env /app/
 
-# upgrade pip
-RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip 
 
 CMD ["python", "main.py"]
-
-RUN 
-
-

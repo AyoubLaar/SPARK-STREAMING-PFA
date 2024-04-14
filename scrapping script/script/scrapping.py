@@ -9,7 +9,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver import ChromeOptions
 from webdriver_manager.chrome import ChromeDriverManager
 import traceback
-import pandas as pd
 from dotenv import load_dotenv,find_dotenv
 import os
 from database import POST_ORM
@@ -21,7 +20,7 @@ class EmptyPostException(Exception):
 
 class Post:
     posts_cache = []
-    post_orm = POST_ORM()
+    post_orm = None
     label = os.environ.get("LABEL")
     counter = 0
 
@@ -40,7 +39,6 @@ class Post:
             time.sleep(0.5)
             driver.back()
             #Back to timeline with same posts
-            Post.counter = Post.counter + 1
             print("posts scrapped ",Post.counter)
         except EmptyPostException:
             print("empty")
@@ -66,12 +64,6 @@ class Post:
                 posts[i+1].location_once_scrolled_into_view
                 i = i + 1
         return None
-
-    @staticmethod
-    def flush():
-        df = pd.DataFrame(Post.posts_cache)
-        Post.posts_cache = []
-        df.to_csv("test.csv",mode="a+")
 
     def is_scrapped_Timeline(self):
         self.usertag = WebDriverWait(self.div, 1).until(EC.presence_of_element_located((By.XPATH,TimelinePage.usertag_relative_XPATH))).text
@@ -108,9 +100,14 @@ class Post:
         except TimeoutException:
             self.time_date = "unknown"
         #time.sleep(1)
-        Post.post_orm.save(self.usertag,self.time_date,self.text,Post.label)
-        Post.posts_cache.append((self.usertag,self.time_date,self.text))
-        
+        try:
+            Post.post_orm.save(self)
+            Post.counter = Post.counter + 1
+        except:
+            traceback.print_exception()
+        finally:
+            Post.posts_cache.append((self.usertag,self.time_date,self.text))
+
 class PostPage:
     translated_text_XPATH = "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[1]/div/div[3]/div"
     default_text_XPATH = "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[1]/div/div"
@@ -149,15 +146,12 @@ def get_posts():
     return posts_container.find_elements(By.XPATH,"div")
 
 def scrap_posts(posts_size = 100):
-    while len(Post.posts_cache) < posts_size:
+    while Post.counter < posts_size:
         post = Post.next()
         while post == None:
             post = Post.next()
         post.scrap_post()
-       
-def is_stale(element):
-    EC.staleness_of(element)
-    
+
 def click_element(XPATH,wait=0):
     element = WebDriverWait(driver, 1).until(EC.presence_of_element_located((By.XPATH, XPATH)))
     time.sleep(wait)
@@ -192,6 +186,20 @@ def run():
     url = "https://twitter.com/i/flow/login"
     driver.get(url)
     try:
+        count = 0
+        while count < 10:
+            try:
+                print("Connecting to database")
+                Post.post_orm = POST_ORM()
+                print("Connection successful")
+                break
+            except:
+                traceback.print_exc()
+                print("Connection error")
+                count = count + 1
+                time.sleep(1)
+        if count == 10:
+            exit()
         print("logging in...")
         login()
         print("login successfull!")
@@ -200,7 +208,6 @@ def run():
         print("search successfull!")
         scrap_posts(posts_size=int(os.environ.get("SCRAPPING_QUANTITY")))
         driver.execute_script("window.scrollBy(0,0)","")
-        Post.flush()
     except:
         print(traceback.format_exc())
         driver.close()
