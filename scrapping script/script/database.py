@@ -30,3 +30,6 @@ class POST_ORM:
         cursor.execute(sql, values)
         self.connection.commit()
         cursor.close()
+    
+    def close(self):
+        self.connection.close()

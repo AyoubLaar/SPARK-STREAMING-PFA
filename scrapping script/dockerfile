@@ -10,10 +10,12 @@ RUN apt-get -y update
 RUN apt-get install -y google-chrome-stable
 
 COPY requirements.txt .
-COPY script/ /app/
+COPY script/*.py /app/
 COPY .env /app/
 
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --upgrade pip 
 
-CMD ["python", "main.py"]
+EXPOSE 8000
+
+CMD ["gunicorn", "--config", "gunicorn_config.py","app:app"]

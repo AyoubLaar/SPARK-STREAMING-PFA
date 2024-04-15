@@ -10,8 +10,8 @@ from selenium.webdriver import ChromeOptions
 from webdriver_manager.chrome import ChromeDriverManager
 import traceback
 from dotenv import load_dotenv,find_dotenv
-import os
 from database import POST_ORM
+from flask import jsonify
 
 load_dotenv(find_dotenv())
 
@@ -19,9 +19,9 @@ class EmptyPostException(Exception):
     pass
 
 class Post:
-    posts_cache = []
+    blacklist_users = []
     post_orm = None
-    label = os.environ.get("LABEL")
+    label = None
     counter = 0
 
     def __init__(self,div) -> None:
@@ -67,16 +67,13 @@ class Post:
 
     def is_scrapped_Timeline(self):
         self.usertag = WebDriverWait(self.div, 1).until(EC.presence_of_element_located((By.XPATH,TimelinePage.usertag_relative_XPATH))).text
-        for post_content in Post.posts_cache:
-            if post_content[0] == self.usertag:
-                return True
-        return False
+        return self.usertag in Post.blacklist_users
 
     def click_post(self):
         click_target = WebDriverWait(self.div, 10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.click_target_relative_XPATH)))
         if click_target.text == "" :
             usertag = WebDriverWait(self.div, 10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.usertag_relative_XPATH))).text
-            Post.posts_cache.append((usertag,"empty","Empty"))
+            Post.blacklist_users.append(usertag)
             raise EmptyPostException("empty post")
         driver.execute_script("arguments[0].click()",click_target)
     
@@ -106,7 +103,7 @@ class Post:
         except:
             traceback.print_exception()
         finally:
-            Post.posts_cache.append((self.usertag,self.time_date,self.text))
+            Post.blacklist_users.append(self.usertag)
 
 class PostPage:
     translated_text_XPATH = "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[1]/div/div[3]/div"
@@ -124,13 +121,13 @@ class TimelinePage:
     filter_replies_XPATH = "/html/body/div[1]/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[2]/div/div[8]/label/div/div[2]/input"
     filter_search_XPATH = "/html/body/div[1]/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[2]/div/div[2]/div[1]/div/label/div/div[2]/div/input"
 
-def login():
-    username = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[autocomplete="username"]')))
-    username.send_keys(os.environ.get("LOGIN"))
-    username.send_keys(Keys.ENTER)
-    password = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="password"]')))
-    password.send_keys(os.environ.get("PASSWORD"))
-    password.send_keys(Keys.ENTER)
+def login(login,password):
+    username_input = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[autocomplete="username"]')))
+    username_input.send_keys(login)
+    username_input.send_keys(Keys.ENTER)
+    password_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="password"]')))
+    password_input.send_keys(password)
+    password_input.send_keys(Keys.ENTER)
 
 def search_latest(search):
     filter = "-filter:replies"
@@ -173,7 +170,7 @@ def is_element_visible_in_viewpoint(element) -> bool:
     except:
         return False
 
-def run():
+def run(username,password,posts_size,search,label):
     options = ChromeOptions()
     options.add_argument("--start-maximized")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
@@ -199,16 +196,20 @@ def run():
                 count = count + 1
                 time.sleep(1)
         if count == 10:
-            exit()
+            print("attempted connection 10 times, now exiting.....")
+            return jsonify(success=False)
         print("logging in...")
-        login()
+        login(username,password)
         print("login successfull!")
         print("Searching...")
-        search_latest(os.environ.get("SEARCH"))
+        search_latest(search)
         print("search successfull!")
-        scrap_posts(posts_size=int(os.environ.get("SCRAPPING_QUANTITY")))
+        Post.label = label
+        scrap_posts(posts_size)
         driver.execute_script("window.scrollBy(0,0)","")
+        jsonify(success=False)
     except:
         print(traceback.format_exc())
         driver.close()
+        Post.post_orm.close()
 
