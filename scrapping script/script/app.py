@@ -2,6 +2,7 @@ import scrapping
 from database import POST_ORM
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv,find_dotenv
+import traceback
 
 load_dotenv(find_dotenv())
 app = Flask(__name__)
@@ -19,15 +20,16 @@ def scrap():
         )
         return jsonify(success=True)
     except:
-        return jsonify(success=False)
-
+        return jsonify(success=False,message=traceback.format_exc())
+    
 @app.route('/test_database', methods=["GET"])
 def test_database():
-    try:
-        POST_ORM()
+    try: 
+        post_orm = POST_ORM()
+        post_orm.close()
         return jsonify(success=True)
     except:
-        return jsonify(success=False)
+        return jsonify(success=False,message=traceback.format_exc())
         
 @app.route('/test_search', methods=["POST"])
 def test_search():

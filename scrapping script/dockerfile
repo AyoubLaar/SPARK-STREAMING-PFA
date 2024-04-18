@@ -9,10 +9,10 @@ RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable 
 RUN apt-get -y update
 RUN apt-get install -y google-chrome-stable
 
-COPY requirements.txt .
+COPY script/requirements.txt .
 COPY script/*.py /app/
-COPY .env /app/
-COPY firestore_key.json /app/
+COPY script/.env /app/
+COPY script/firestore_key.json /app/
 
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --upgrade pip 
