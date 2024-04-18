@@ -5,25 +5,5 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile   
-    depends_on:
-      - db
-
-  db:
-    container_name: db
-    image: mysql:latest
-    restart: always
-    environment:
-      MYSQL_DATABASE: posts
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: password
     ports:
-      - 3306:3306
-    expose:
-      - 3306
-    volumes:
-      - my-db:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-  
-volumes:
-  my-db:
+      - 8080:8080

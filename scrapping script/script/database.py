@@ -1,35 +1,27 @@
-from mysql.connector import connect
-import os
-
-"""
-CREATE TABLE UserPosts (
-    usertag VARCHAR(255),
-    date_time DATETIME,
-    post TEXT,
-    label VARCHAR(50),
-    PRIMARY KEY (usertag,date_time)
-);
-"""
+from google.cloud import firestore
 
 class POST_ORM:
     def __init__(self):
-        self.connection = connect(
-            user=os.environ.get("MYSQL_USER"), 
-            password=os.environ.get("MYSQL_PASSWORD"),
-            host=os.environ.get("MYSQL_HOST"),
-            port=os.environ.get("MYSQL_PORT"),
-            database=os.environ.get("MYSQL_DATABASE"))
-    """
-    INSERT IGNORE INTO UserPosts (usertag, date_time, post, label)
-    VALUES ('usertag_value', '2024-04-11 12:00:00', 'This is a post.', 'label_value');
-    """
+        self.connection = firestore.Client()
+  
     def save(self,post):
-        sql = f"INSERT INTO UserPosts (usertag, date_time, post, label) VALUES (%s, %s, %s, %s);"
-        values = (post.usertag, post.time_date, post.text, post.label)
-        cursor = self.connection.cursor()
-        cursor.execute(sql, values)
-        self.connection.commit()
-        cursor.close()
-    
+        data = { "post":post.text, "label":post.label}
+        #Create will throw exception if document already exists
+        self.connection.collection("posts").document(post.usertag+" "+post.time_date).create(data)
+        
     def close(self):
         self.connection.close()
+
+
+if __name__ == "__main__":
+    from dotenv import load_dotenv,find_dotenv
+    load_dotenv(find_dotenv())
+    class test_class:
+        def __init__(self) -> None:
+            self.text = "testing"
+            self.label = "l"
+            self.usertag = "ayoub"
+            self.time_date = "time_test"
+    post_orm = POST_ORM()
+    post_orm.save(test_class())
+    pass

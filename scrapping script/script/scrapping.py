@@ -9,11 +9,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver import ChromeOptions
 from webdriver_manager.chrome import ChromeDriverManager
 import traceback
-from dotenv import load_dotenv,find_dotenv
 from database import POST_ORM
-from flask import jsonify
 
-load_dotenv(find_dotenv())
 
 class EmptyPostException(Exception):
     pass
@@ -22,6 +19,7 @@ class Post:
     blacklist_users = []
     post_orm = None
     label = None
+    successive_save_exceptions = 0
     counter = 0
 
     def __init__(self,div) -> None:
@@ -96,12 +94,13 @@ class Post:
             self.time_date = times[0].get_attribute("datetime").replace("T"," ",1)[:19]
         except TimeoutException:
             self.time_date = "unknown"
-        #time.sleep(1)
         try:
             Post.post_orm.save(self)
             Post.counter = Post.counter + 1
+            Post.successive_save_exceptions = 0
         except:
             traceback.print_exception()
+            Post.successive_save_exceptions = Post.successive_save_exceptions + 1
         finally:
             Post.blacklist_users.append(self.usertag)
 
@@ -137,13 +136,52 @@ def search_latest(search):
     latest_button = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.latest_button_XPATH)))
     latest_button.click()
 
+def test_search(login,password,search) -> list:
+    try:
+        message = ["driver doesn't connect","","",""]
+        options = ChromeOptions()
+        options.add_argument("--start-maximized")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument("--headless=new")
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)    
+        url = "https://twitter.com/i/flow/login"
+        driver.get(url)
+        message[0] = "driver connects!"
+        message[1] = "login doesn't work"
+        username_input = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[autocomplete="username"]')))
+        username_input.send_keys(login)
+        username_input.send_keys(Keys.ENTER)
+        password_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="password"]')))
+        password_input.send_keys(password)
+        password_input.send_keys(Keys.ENTER)
+        message[1] = "login works!"
+        message[2] = "search doesn't work"
+        filter = "-filter:replies"
+        search_bar = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.search_XPATH)))
+        search_bar.send_keys(search + " " +filter)
+        search_bar.send_keys(Keys.ENTER)
+        latest_button = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.latest_button_XPATH)))
+        latest_button.click()
+        message[2] = "search works!"
+        message[3] = "post scrapping doesn't work"
+        post = Post.next()
+        if post == None:
+            return message
+        post.scrap_post()
+        message[3] = "post scrapping works!"
+        return message
+    except:
+        return message
+
 
 def get_posts():
     posts_container = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, TimelinePage.posts_container_XPATH)))
     return posts_container.find_elements(By.XPATH,"div")
 
 def scrap_posts(posts_size = 100):
-    while Post.counter < posts_size:
+    while Post.counter < posts_size and Post.successive_save_exceptions < 10:
         post = Post.next()
         while post == None:
             post = Post.next()
@@ -184,7 +222,7 @@ def run(username,password,posts_size,search,label):
     driver.get(url)
     try:
         count = 0
-        while count < 10:
+        while count < 5:
             try:
                 print("Connecting to database")
                 Post.post_orm = POST_ORM()
@@ -195,9 +233,9 @@ def run(username,password,posts_size,search,label):
                 print("Connection error")
                 count = count + 1
                 time.sleep(1)
-        if count == 10:
-            print("attempted connection 10 times, now exiting.....")
-            return jsonify(success=False)
+        if count == 5:
+            print("attempted connection 5 times, now exiting.....")
+            raise Exception()
         print("logging in...")
         login(username,password)
         print("login successfull!")
@@ -207,9 +245,10 @@ def run(username,password,posts_size,search,label):
         Post.label = label
         scrap_posts(posts_size)
         driver.execute_script("window.scrollBy(0,0)","")
-        jsonify(success=False)
+        driver.close()
+        Post.post_orm.close()
     except:
         print(traceback.format_exc())
         driver.close()
         Post.post_orm.close()
-
+        raise Exception()
