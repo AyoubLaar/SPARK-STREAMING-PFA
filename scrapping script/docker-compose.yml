@@ -6,6 +6,6 @@ services:
       context: .
       dockerfile: dockerfile-script
     env_file:
-      - $PWD/script/.env   
+      - .env   
     volumes:
     - ${PWD}/actions.log:/var/log/actions.log
