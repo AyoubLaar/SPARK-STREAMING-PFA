@@ -1,6 +1,7 @@
 python-dotenv==1.0.1
 selenium==4.18.1
 webdriver-manager==4.0.1
-Flask
-gunicorn
+# Uncomment for dockerfile-gunicorn
+# Flask
+# gunicorn
 google-cloud-firestore

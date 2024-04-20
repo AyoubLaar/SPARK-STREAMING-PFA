@@ -10,13 +10,12 @@ RUN apt-get -y update
 RUN apt-get install -y google-chrome-stable
 
 COPY script/requirements.txt .
-COPY script/*.py /app/
-COPY script/.env /app/
+COPY script/database.py /app/
+COPY script/scrapping.py /app/
 COPY script/firestore_key.json /app/
+RUN touch /var/log/actions.log
 
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --upgrade pip 
 
-EXPOSE 8080
-
-CMD ["gunicorn", "--config", "gunicorn_config.py","app:app"]
+CMD ["python", "scrapping.py"]

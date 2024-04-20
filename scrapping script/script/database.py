@@ -1,13 +1,16 @@
 from google.cloud import firestore
 
 class POST_ORM:
+
+    counter = 0
+
     def __init__(self):
         self.connection = firestore.Client()
   
     def save(self,post):
         data = { "post":post.text, "label":post.label}
-        #Create will throw exception if document already exists
         self.connection.collection("posts").document(post.usertag+" "+post.time_date).create(data)
+        POST_ORM.counter = POST_ORM.counter + 1
         
     def close(self):
         self.connection.close()

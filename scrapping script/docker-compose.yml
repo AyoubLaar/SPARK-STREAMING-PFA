@@ -4,6 +4,8 @@ services:
     container_name: seleniumapp
     build: 
       context: .
-      dockerfile: Dockerfile   
-    ports:
-      - 8080:8080
+      dockerfile: dockerfile-script
+    env_file:
+      - $PWD/script/.env   
+    volumes:
+    - ${PWD}/actions.log:/var/log/actions.log

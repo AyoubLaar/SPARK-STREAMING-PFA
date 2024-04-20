@@ -1,4 +1,4 @@
-import time
+from time import sleep
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -8,19 +8,23 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver import ChromeOptions
 from webdriver_manager.chrome import ChromeDriverManager
-import traceback
+from traceback import format_exc 
 from database import POST_ORM
+import logging 
+import os
+from google.api_core.exceptions import AlreadyExists
 
+logging.basicConfig(filename='/var/log/actions.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class EmptyPostException(Exception):
     pass
 
 class Post:
     blacklist_users = []
-    post_orm = None
     label = None
     successive_save_exceptions = 0
     counter = 0
+    post_orm = None
 
     def __init__(self,div) -> None:
         self.div = div
@@ -29,21 +33,24 @@ class Post:
     
     def scrap_post(self):
         try:
-            time.sleep(0.5)
+            sleep(0.5)
             self.click_post()
             #now we are in post page
-            time.sleep(0.5)
+            sleep(0.5)
             self.scrap_text()
-            time.sleep(0.5)
+            sleep(0.5)
             driver.back()
             #Back to timeline with same posts
-            print("posts scrapped ",Post.counter)
+            logging.info("posts scrapped %s",str(Post.counter))
         except EmptyPostException:
-            print("empty")
+            logging.warning("empty")
 
     @staticmethod
     def  next():
         posts = get_posts()
+        while posts is None:
+            sleep(1)
+            posts = get_posts()
         i = 0 
         while i < len(posts) and not is_element_visible_in_viewpoint(posts[i]):
             i = i + 1
@@ -64,33 +71,23 @@ class Post:
         return None
 
     def is_scrapped_Timeline(self):
-        self.usertag = WebDriverWait(self.div, 1).until(EC.presence_of_element_located((By.XPATH,TimelinePage.usertag_relative_XPATH))).text
+        self.usertag = WebDriverWait(self.div, 5).until(EC.presence_of_element_located((By.XPATH,TimelinePage.usertag_relative_XPATH))).text
         return self.usertag in Post.blacklist_users
 
     def click_post(self):
-        click_target = WebDriverWait(self.div, 10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.click_target_relative_XPATH)))
+        click_target = WebDriverWait(self.div, 60).until(EC.presence_of_element_located((By.XPATH,TimelinePage.click_target_relative_XPATH)))
         if click_target.text == "" :
-            usertag = WebDriverWait(self.div, 10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.usertag_relative_XPATH))).text
+            usertag = WebDriverWait(self.div, 60).until(EC.presence_of_element_located((By.XPATH,TimelinePage.usertag_relative_XPATH))).text
             Post.blacklist_users.append(usertag)
             raise EmptyPostException("empty post")
         driver.execute_script("arguments[0].click()",click_target)
     
     def scrap_text(self):
-        default_text = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, PostPage.default_text_XPATH)))
-        #time.sleep(1)
+        default_text = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.XPATH, PostPage.default_text_XPATH)))
+        #sleep(1)
+        self.text = default_text.text
         try:
-            #If not in english a translate button is provided by twitter
-            #if non existant => Text is in english => throws error => default behavior in except section.
-            click_element(PostPage.click_translate_XPATH)
-            translated_text = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, PostPage.translated_text_XPATH))) 
-            translated_text.location_once_scrolled_into_view
-            self.text = translated_text.text
-        except TimeoutException:
-            #Text in english
-            #time.sleep(1)
-            self.text = default_text.text
-        try:
-            times = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.TAG_NAME,"time")))
+            times = WebDriverWait(driver, 5).until(EC.presence_of_all_elements_located((By.TAG_NAME,"time")))
             self.time_date = times[0].get_attribute("datetime").replace("T"," ",1)[:19]
         except TimeoutException:
             self.time_date = "unknown"
@@ -98,8 +95,11 @@ class Post:
             Post.post_orm.save(self)
             Post.counter = Post.counter + 1
             Post.successive_save_exceptions = 0
+        except AlreadyExists:
+            logging.error("Post already exists")
+            Post.successive_save_exceptions = Post.successive_save_exceptions + 1
         except:
-            traceback.print_exception()
+            logging.error(format_exc())
             Post.successive_save_exceptions = Post.successive_save_exceptions + 1
         finally:
             Post.blacklist_users.append(self.usertag)
@@ -116,27 +116,37 @@ class TimelinePage:
     click_target_relative_XPATH = "div/div/article/div/div/div[2]/div[2]/div[2]/div"
     search_XPATH = "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[2]/div/div[2]/div/div/div/div[1]/div/div/div/form/div[1]/div/div/div/label/div[2]/div/input"
     latest_button_XPATH = "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[1]/div[1]/div[2]/nav/div/div[2]/div/div[2]/a"
-    filter_XPATH = "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[2]/div/div[2]/div/div/div/div[2]/div/div[2]/a/div"
-    filter_replies_XPATH = "/html/body/div[1]/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[2]/div/div[8]/label/div/div[2]/input"
-    filter_search_XPATH = "/html/body/div[1]/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[2]/div/div[2]/div[1]/div/label/div/div[2]/div/input"
-
+    
+def optionnal_username(login):
+    try:
+        input = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH,'input[autocomplete="on"]')))
+        logging.info("Unusual activity detected!")
+        sleep(0.5)
+        input.send_keys(login)
+        input.send_keys(Keys.ENTER)
+    except:
+        logging.info("No unusual activity detected!")
+    
 def login(login,password):
-    username_input = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[autocomplete="username"]')))
+    username_input = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[autocomplete="username"]')))
     username_input.send_keys(login)
+    sleep(0.5)
     username_input.send_keys(Keys.ENTER)
-    password_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="password"]')))
+    optionnal_username(login)
+    password_input = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="password"]')))
     password_input.send_keys(password)
+    sleep(0.5)
     password_input.send_keys(Keys.ENTER)
 
 def search_latest(search):
-    filter = "-filter:replies"
-    search_bar = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.search_XPATH)))
+    filter = "lang:en -filter:replies"
+    search_bar = WebDriverWait(driver,60).until(EC.presence_of_element_located((By.XPATH,TimelinePage.search_XPATH)))
     search_bar.send_keys(search + " " +filter)
     search_bar.send_keys(Keys.ENTER)
-    latest_button = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.latest_button_XPATH)))
+    latest_button = WebDriverWait(driver,60).until(EC.presence_of_element_located((By.XPATH,TimelinePage.latest_button_XPATH)))
     latest_button.click()
 
-def test_search(login,password,search) -> list:
+def test_all(login,password,search) -> list:
     try:
         message = ["driver doesn't connect","","",""]
         options = ChromeOptions()
@@ -150,46 +160,55 @@ def test_search(login,password,search) -> list:
         driver.get(url)
         message[0] = "driver connects!"
         message[1] = "login doesn't work"
-        username_input = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[autocomplete="username"]')))
+        username_input = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[autocomplete="username"]')))
         username_input.send_keys(login)
         username_input.send_keys(Keys.ENTER)
-        password_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="password"]')))
+        password_input = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="password"]')))
         password_input.send_keys(password)
         password_input.send_keys(Keys.ENTER)
         message[1] = "login works!"
         message[2] = "search doesn't work"
-        filter = "-filter:replies"
-        search_bar = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.search_XPATH)))
+        filter = "lang:en -filter:replies"
+        search_bar = WebDriverWait(driver,60).until(EC.presence_of_element_located((By.XPATH,TimelinePage.search_XPATH)))
         search_bar.send_keys(search + " " +filter)
         search_bar.send_keys(Keys.ENTER)
-        latest_button = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,TimelinePage.latest_button_XPATH)))
+        latest_button = WebDriverWait(driver,60).until(EC.presence_of_element_located((By.XPATH,TimelinePage.latest_button_XPATH)))
         latest_button.click()
         message[2] = "search works!"
         message[3] = "post scrapping doesn't work"
         post = Post.next()
         if post == None:
+            print("NONE")
             return message
         post.scrap_post()
         message[3] = "post scrapping works!"
         return message
     except:
+        logging.error(format_exc())
         return message
 
 
 def get_posts():
-    posts_container = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, TimelinePage.posts_container_XPATH)))
-    return posts_container.find_elements(By.XPATH,"div")
+    try:
+        posts_container = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.XPATH, TimelinePage.posts_container_XPATH)))
+        divs = WebDriverWait(posts_container, 60).until(EC.presence_of_all_elements_located((By.XPATH, "div")))
+        return divs
+    except:
+        logging.error(format_exc())
 
 def scrap_posts(posts_size = 100):
+    logging.info("scrapping %s posts",str(posts_size))
     while Post.counter < posts_size and Post.successive_save_exceptions < 10:
         post = Post.next()
         while post == None:
             post = Post.next()
         post.scrap_post()
+    logging.info("%s posts scrapped from %s",str(Post.counter),str(posts_size))
+    driver.execute_script("window.scrollBy(0,0)","")
 
 def click_element(XPATH,wait=0):
-    element = WebDriverWait(driver, 1).until(EC.presence_of_element_located((By.XPATH, XPATH)))
-    time.sleep(wait)
+    element = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.XPATH, XPATH)))
+    sleep(wait)
     driver.execute_script("arguments[0].click()",element)
 
 def is_element_visible_in_viewpoint(element) -> bool:
@@ -221,34 +240,34 @@ def run(username,password,posts_size,search,label):
     url = "https://twitter.com/i/flow/login"
     driver.get(url)
     try:
-        count = 0
-        while count < 5:
-            try:
-                print("Connecting to database")
-                Post.post_orm = POST_ORM()
-                print("Connection successful")
-                break
-            except:
-                traceback.print_exc()
-                print("Connection error")
-                count = count + 1
-                time.sleep(1)
-        if count == 5:
-            print("attempted connection 5 times, now exiting.....")
-            raise Exception()
-        print("logging in...")
+        try:
+            logging.info("Connecting to database")
+            Post.post_orm = POST_ORM()
+            logging.info("Connection successful")
+        except:
+            logging.error(format_exc())
+            logging.error("Connection error")
+            exit()
+        logging.info("logging in...")
         login(username,password)
-        print("login successfull!")
-        print("Searching...")
+        logging.info("login successfull!")
+        logging.info("Searching...")
         search_latest(search)
-        print("search successfull!")
+        logging.info("search successfull!")
         Post.label = label
+        print((username,password,posts_size,search,label))
         scrap_posts(posts_size)
-        driver.execute_script("window.scrollBy(0,0)","")
-        driver.close()
-        Post.post_orm.close()
     except:
-        print(traceback.format_exc())
-        driver.close()
+        logging.error(format_exc())
+    finally:
+        driver.quit()
         Post.post_orm.close()
-        raise Exception()
+
+if __name__ == "__main__":
+    username = os.environ.get("LOGIN")
+    password = os.environ.get("PASSWORD")
+    posts_size = int(os.environ.get("POSTS_SIZE"))
+    search = os.environ.get("SEARCH")
+    label = os.environ.get("LABEL")
+    run(username,password,posts_size,search,label)
+    
