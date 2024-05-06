@@ -1,0 +1,8 @@
+pandas
+tensorflow
+matplotlib
+tweet-preprocessor
+gensim
+nltk
+scikit-learn
+wordcloud

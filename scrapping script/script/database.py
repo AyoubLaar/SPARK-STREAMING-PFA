@@ -1,5 +1,6 @@
 from google.cloud import firestore
 
+
 class POST_ORM:
 
     counter = 0
@@ -8,8 +9,8 @@ class POST_ORM:
         self.connection = firestore.Client()
   
     def save(self,post):
-        data = { "post":post.text, "label":post.label}
-        self.connection.collection("posts").document(post.usertag+" "+post.time_date).create(data)
+        data = { "post":post.text, "label":post.label,"usertag":post.usertag,"time_date":post.time_date}
+        self.connection.collection("posts").document().set(data)
         POST_ORM.counter = POST_ORM.counter + 1
         
     def close(self):
@@ -17,8 +18,6 @@ class POST_ORM:
 
 
 if __name__ == "__main__":
-    from dotenv import load_dotenv,find_dotenv
-    load_dotenv(find_dotenv())
     class test_class:
         def __init__(self) -> None:
             self.text = "testing"
