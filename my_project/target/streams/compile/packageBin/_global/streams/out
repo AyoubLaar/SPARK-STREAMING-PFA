@@ -1,0 +1,7 @@
+[0m[[0m[0mdebug[0m] [0m[0mPackaging /home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/target/scala-2.12/kafkastreamdemo_2.12-0.1.jar ...[0m
+[0m[[0m[0mdebug[0m] [0m[0mInput file mappings:[0m
+[0m[[0m[0mdebug[0m] [0m[0m	KafkaStreamDemo.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/target/scala-2.12/classes/KafkaStreamDemo.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	KafkaStreamDemo$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/target/scala-2.12/classes/KafkaStreamDemo$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0mDone packaging.[0m

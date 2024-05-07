@@ -1,0 +1,32 @@
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(compile, Some(1204656e-b20e-45de-8220-7d4226d011dc), Some(CommandSource(console0)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mEvaluating tasks: Compile / compile[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning task... Cancel: Signal, check cycles: false, forcegc: true[0m
+[0m[[0m[0minfo[0m] [0m[0mcompiling 1 Scala source to /home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/target/scala-2.12/classes ...[0m
+[0m[[0m[31merror[0m] [0m[0m/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/src/main/scala/KafkaSparkStreaming.scala:51:20: not found: type SparkConf[0m
+[0m[[0m[31merror[0m] [0m[0m    val conf = new SparkConf().setMaster("local[*]").setAppName("KafkaSparkStreaming")[0m
+[0m[[0m[31merror[0m] [0m[0m                   ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/src/main/scala/KafkaSparkStreaming.scala:52:19: not found: type StreamingContext[0m
+[0m[[0m[31merror[0m] [0m[0m    val ssc = new StreamingContext(conf, Seconds(10))[0m
+[0m[[0m[31merror[0m] [0m[0m                  ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/src/main/scala/KafkaSparkStreaming.scala:52:42: not found: value Seconds[0m
+[0m[[0m[31merror[0m] [0m[0m    val ssc = new StreamingContext(conf, Seconds(10))[0m
+[0m[[0m[31merror[0m] [0m[0m                                         ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/src/main/scala/KafkaSparkStreaming.scala:57:37: not found: type StringDeserializer[0m
+[0m[[0m[31merror[0m] [0m[0m      "key.deserializer" -> classOf[StringDeserializer],[0m
+[0m[[0m[31merror[0m] [0m[0m                                    ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/src/main/scala/KafkaSparkStreaming.scala:58:39: not found: type StringDeserializer[0m
+[0m[[0m[31merror[0m] [0m[0m      "value.deserializer" -> classOf[StringDeserializer],[0m
+[0m[[0m[31merror[0m] [0m[0m                                      ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/src/main/scala/KafkaSparkStreaming.scala:66:23: not found: value KafkaUtils[0m
+[0m[[0m[31merror[0m] [0m[0m    val kafkaStream = KafkaUtils.createDirectStream[String, String]([0m
+[0m[[0m[31merror[0m] [0m[0m                      ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/src/main/scala/KafkaSparkStreaming.scala:68:7: not found: value PreferConsistent[0m
+[0m[[0m[31merror[0m] [0m[0m      PreferConsistent,[0m
+[0m[[0m[31merror[0m] [0m[0m      ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/src/main/scala/KafkaSparkStreaming.scala:69:7: not found: value Subscribe[0m
+[0m[[0m[31merror[0m] [0m[0m      Subscribe[String, String](topics, kafkaParams)[0m
+[0m[[0m[31merror[0m] [0m[0m      ^[0m
+[0m[[0m[31merror[0m] [0m[0m8 errors found[0m
+[0m[[0m[31merror[0m] [0m[0m(Compile / [31mcompileIncremental[0m) Compilation failed[0m
+[0m[[0m[31merror[0m] [0m[0mTotal time: 29 s, completed Apr 28, 2024, 1:49:46 PM[0m
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(shell, None, None)[0m

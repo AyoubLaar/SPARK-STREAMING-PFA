@@ -3,6 +3,8 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.{col, expr, from_json}
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, Dataset}
+
 
 
 object KafkaStreamDemo extends Serializable {
@@ -11,20 +13,26 @@ object KafkaStreamDemo extends Serializable {
   def main(args: Array[String]): Unit = {
 
     //Creating sparksession
-    val spark = SparkSession.builder()
-      .master("local[3]")
+
+      val spark = SparkSession.builder()
+      .master("local[*]")
       .appName("Kafka Stream Demo")
       .config("spark.streaming.stopGracefullyOnShutdown", "true")
       .getOrCreate()
 
-    //determine csv schema
-    val schema = StructType(
-      StructField("Poste date", StringType),
-      StructField("Title", StringType),
-      StructField("Location", StringType),
-      StructField("Company", StringType),
-      StructField("Job type", StringType),
-      StructField("Job description", StringType))
+    // Define PostgreSQL connection properties
+    val pgUrl = "jdbc:postgresql://localhost:5432/postgres" // Adjust the URL as needed
+    val pgProperties = new java.util.Properties()
+    pgProperties.setProperty("user", "postgres") // PostgreSQL username
+    pgProperties.setProperty("password", "user") // PostgreSQL password
+
+
+    val jsonSchema = new StructType()
+      .add("Title", StringType)
+      .add("Location", StringType)
+      .add("Company", StringType)
+      .add("Job type", StringType)
+      .add("Job description", StringType)
 
       //creating the kafka dataframe
     val kafkaStreamDF = spark
@@ -36,14 +44,27 @@ object KafkaStreamDemo extends Serializable {
       .load()
     
 // Convert value column (containing Kafka message) to string
-    val kafkaDF = kafkaStreamDF.selectExpr("CAST(value AS STRING)")
+    val kafkaDF = kafkaStreamDF.selectExpr("CAST(value AS STRING) as jsonString")
 
-    // Print the content of the DataFrame to the console
-    val query = kafkaDF
-      .writeStream
-      .outputMode("append")
-      .format("console")
+// Parse JSON string and convert it to DataFrame using the schema
+    val jsonDF = kafkaDF
+      .select(from_json(col("jsonString"), jsonSchema).as("data"))
+      .select("data.*")
+
+    def myFunc( batchDF:DataFrame, batchID:Long ) : Unit = {
+    batchDF.write
+          .mode("append")
+          .jdbc(pgUrl, "jobs", pgProperties)
+}
+
+
+
+    // Write the data to PostgreSQL using the Spark JDBC API
+    val query = jsonDF.writeStream
+      .foreachBatch(myFunc _)
       .start()
 
     logger.info("Listening to Kafka")
-    query.awaitTermination()}}
+    query.awaitTermination()
+  }
+}

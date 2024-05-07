@@ -1,31 +1,47 @@
-from confluent_kafka import Producer
 import csv
+import json
 import time
+from confluent_kafka import Producer
 
-# Kafka broker configuration
-bootstrap_servers = 'localhost:9092'
-topic = 'jobposts'
+# Kafka configuration
+kafka_config = {
+    'bootstrap.servers': 'localhost:9092'  # Kafka broker address (adjust as needed)
+}
 
-# Function to publish CSV data to Kafka topic
-def publish_csv_to_kafka(file_path):
+# Kafka topic
+topic = 'jobposts'  # Specify the Kafka topic you want to produce messages to
+
+# CSV file path
+file_path = 'data_streaming/IT.csv'  # Specify the path to the CSV file
+
+# Function to produce messages to Kafka with real-time simulation
+def produce_messages(file_path, delay=1.0):
     # Create Kafka Producer instance
-    producer = Producer({'bootstrap.servers': bootstrap_servers})
+    producer = Producer(kafka_config)
 
-    # Read CSV file and publish each line as a message to Kafka
-    with open(file_path, 'r') as csv_file:
-        csv_reader = csv.reader(csv_file)
+    # Read CSV file and produce each row as a message to Kafka
+    with open(file_path, 'r', encoding='utf-8') as csv_file:
+        # Create a CSV reader
+        csv_reader = csv.DictReader(csv_file)
+        
+        # Iterate over each row in the CSV data
         for row in csv_reader:
-            # Convert row to string and send to Kafka topic
-            producer.produce(topic, str(row).encode('utf-8'))
-            # Flush messages to ensure they are sent immediately
-            producer.flush()
-            # Introduce a delay (optional)
-            time.sleep(1)
+            # Convert the row dictionary to a JSON string
+            json_string = json.dumps(row)
 
-    # Close the Kafka Producer
+            # Produce the message to the Kafka topic
+            producer.produce(topic, key=None, value=json_string.encode('utf-8'))
+
+            # Optional: Handle delivery reports for messages
+            producer.poll(0)
+
+            # Introduce a delay to simulate real-time data streaming
+            time.sleep(delay)
+
+    # Flush any remaining messages
     producer.flush()
-    producer.close()
 
-# Example usage
-file_path = '/home/noureddine/Desktop/VS code coding/python/indeed-job-analysis/IT.csv'
-publish_csv_to_kafka(file_path)
+    print(f"Data produced to Kafka topic '{topic}' at a rate of {delay} seconds per message.")
+
+# Run the function to produce messages from the CSV file with a delay
+produce_messages(file_path, delay=1.0)

@@ -2,15 +2,15 @@
     "version": "1.4.0",
     "project": {
         "name": "my_project-build",
-        "directory": "/home/noureddine/Desktop/VS code coding/scala/my_project/project",
-        "workspaceDir": "/home/noureddine/Desktop/VS code coding/scala/my_project/project",
+        "directory": "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project",
+        "workspaceDir": "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project",
         "sources": [
-            "/home/noureddine/Desktop/VS code coding/scala/my_project/project/src/main/scala",
-            "/home/noureddine/Desktop/VS code coding/scala/my_project/project/src/main/scala-2.12",
-            "/home/noureddine/Desktop/VS code coding/scala/my_project/project/src/main/scala-2",
-            "/home/noureddine/Desktop/VS code coding/scala/my_project/project/src/main/java",
-            "/home/noureddine/Desktop/VS code coding/scala/my_project/project/src/main/scala-sbt-1.0",
-            "/home/noureddine/Desktop/VS code coding/scala/my_project/project/target/scala-2.12/sbt-1.0/src_managed/main"
+            "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/src/main/scala",
+            "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/src/main/scala-2.12",
+            "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/src/main/scala-2",
+            "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/src/main/java",
+            "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/src/main/scala-sbt-1.0",
+            "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/target/scala-2.12/sbt-1.0/src_managed/main"
         ],
         "dependencies": [
             
@@ -103,11 +103,11 @@
             "/home/noureddine/.cache/coursier/v1/https/repo1.maven.org/maven2/org/reactivestreams/reactive-streams/1.0.3/reactive-streams-1.0.3.jar",
             "/home/noureddine/.cache/coursier/v1/https/repo1.maven.org/maven2/com/typesafe/config/1.4.2/config-1.4.2.jar"
         ],
-        "out": "/home/noureddine/Desktop/VS code coding/scala/my_project/project/.bloop/my_project-build",
-        "classesDir": "/home/noureddine/Desktop/VS code coding/scala/my_project/project/.bloop/my_project-build/scala-2.12/sbt-1.0/classes",
+        "out": "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/.bloop/my_project-build",
+        "classesDir": "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/.bloop/my_project-build/scala-2.12/sbt-1.0/classes",
         "resources": [
-            "/home/noureddine/Desktop/VS code coding/scala/my_project/project/src/main/resources",
-            "/home/noureddine/Desktop/VS code coding/scala/my_project/project/target/scala-2.12/sbt-1.0/resource_managed/main"
+            "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/src/main/resources",
+            "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/target/scala-2.12/sbt-1.0/resource_managed/main"
         ],
         "scala": {
             "organization": "org.scala-lang",
@@ -212,22 +212,22 @@
         "platform": {
             "name": "jvm",
             "config": {
-                "home": "/usr/lib/jvm/java-11-openjdk-amd64",
+                "home": "/opt/java/java-11-openjdk-amd64",
                 "options": [
-                    "-Duser.dir=/home/noureddine/Desktop/VS code coding/scala/my_project/project"
+                    "-Duser.dir=/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project"
                 ]
             },
             "mainClass": [
                 
             ],
             "runtimeConfig": {
-                "home": "/usr/lib/jvm/java-11-openjdk-amd64",
+                "home": "/opt/java/java-11-openjdk-amd64",
                 "options": [
-                    "-Duser.dir=/home/noureddine/Desktop/VS code coding/scala/my_project/project"
+                    "-Duser.dir=/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project"
                 ]
             },
             "classpath": [
-                "/home/noureddine/Desktop/VS code coding/scala/my_project/project/.bloop/my_project-build/scala-2.12/sbt-1.0/classes",
+                "/home/noureddine/Desktop/VS code coding/SPARK-STREAMING-PFA/my_project/project/.bloop/my_project-build/scala-2.12/sbt-1.0/classes",
                 "/home/noureddine/.cache/coursier/v1/https/repo1.maven.org/maven2/ch/epfl/scala/sbt-bloop_2.12_1.0/1.5.15/sbt-bloop_2.12_1.0-1.5.15.jar",
                 "/home/noureddine/.cache/coursier/v1/https/repo1.maven.org/maven2/ch/epfl/scala/bloop-config_2.12/1.5.5/bloop-config_2.12-1.5.5.jar",
                 "/home/noureddine/.cache/coursier/v1/https/repo1.maven.org/maven2/com/github/plokhotnyuk/jsoniter-scala/jsoniter-scala-core_2.12/2.4.0/jsoniter-scala-core_2.12-2.4.0.jar",
