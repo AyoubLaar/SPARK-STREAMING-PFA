@@ -1,11 +1,10 @@
-version: '3.8'
+version: "3.8"
 services:
   seleniumapp:
     container_name: seleniumapp
-    build: 
+    build:
       context: .
-      dockerfile: dockerfile-script
     env_file:
-      - .env   
+      - .env
     volumes:
-    - ${PWD}/actions.log:/var/log/actions.log
+      - ${PWD}/actions.log:/var/log/actions.log

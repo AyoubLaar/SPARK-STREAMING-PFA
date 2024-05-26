@@ -13,13 +13,12 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver import ChromeOptions
 from webdriver_manager.chrome import ChromeDriverManager
 #My files
-from database import POST_ORM
+from data import POST_ORM,KAFKA_PRODUCER
 from post import Post,init
 from xpath import TimelinePage
 
 # logging.basicConfig(filename='/var/log/actions.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logging.basicConfig(stream=sys.stdout, level=logging.INFO , format='%(asctime)s - %(levelname)s - %(message)s')
-
 
 def optionnal_username(login):
     try:
@@ -60,32 +59,52 @@ def scrap_posts(posts_size = 100):
     logging.info("%s posts scrapped from %s",str(Post.counter),str(posts_size))
     driver.execute_script("window.scrollBy(0,0)","")
 
-def run(username,password,posts_size,search,label):
+def generate_data_handler():
+    data_out = os.environ.get("DATA_OUT")
+    match data_out:
+        case "firebase":
+            try:
+                logging.info("Connecting to firebase")
+                Post.post_orm = POST_ORM()
+                logging.info("Connection successful")
+            except:
+                logging.error(format_exc())
+                logging.error("firebase connection error")
+                exit()
+        case "kafka":
+            try:
+                logging.info("Connecting to kafka")
+                Post.post_orm = KAFKA_PRODUCER()
+                logging.info("Connection successful")
+            except:
+                logging.error(format_exc())
+                logging.error("kafka connection error")
+                
+def run():
+    username = os.environ.get("LOGIN")
+    password = os.environ.get("PASSWORD")
+    posts_size = int(os.environ.get("POSTS_SIZE"))
+    search = os.environ.get("SEARCH")
+    label = os.environ.get("LABEL")
     print((username,password,posts_size,search,label))
     options = ChromeOptions()
     options.add_argument("--start-maximized")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    # options.add_argument("--headless=new")
+    options.add_argument("--headless=new")
     global driver
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)    
     init(driver_value=driver)
     url = "https://twitter.com/i/flow/login"
     driver.get(url)
     try:
-        try:
-            logging.info("Connecting to database")
-            Post.post_orm = POST_ORM()
-            logging.info("Connection successful")
-        except:
-            logging.error(format_exc())
-            logging.error("Connection error")
-            exit()
+        logging.info("setting data handler")
+        generate_data_handler()
         logging.info("logging in...")
         login(username,password)
         logging.info("login successfull!")
-        sleep(60)
+        sleep(10)
         logging.info("Searching...")
         search_latest(search)
         logging.info("search successfull!")
@@ -98,10 +117,4 @@ def run(username,password,posts_size,search,label):
         Post.post_orm.close()
 
 if __name__ == "__main__":
-    username = os.environ.get("LOGIN")
-    password = os.environ.get("PASSWORD")
-    posts_size = int(os.environ.get("POSTS_SIZE"))
-    search = os.environ.get("SEARCH")
-    label = os.environ.get("LABEL")
-    run(username,password,posts_size,search,label)
-    
+    run()

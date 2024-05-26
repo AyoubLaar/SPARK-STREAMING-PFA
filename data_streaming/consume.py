@@ -2,7 +2,6 @@ import os
 from argparse import ArgumentParser, FileType
 from configparser import ConfigParser
 
-
 from confluent_kafka import OFFSET_BEGINNING, Consumer
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import expr
@@ -15,7 +14,6 @@ def create_spark_session(app_name: str):
         .config("spark.streaming.stopGracefullyOnShutdown", "true")
         .getOrCreate()
     )
-
 
 def transform(kafka_msg):
     words_df = kafka_msg.select(expr("explode(split(value,' ')) as word"))

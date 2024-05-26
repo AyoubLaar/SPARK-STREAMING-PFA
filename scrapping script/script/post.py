@@ -64,11 +64,11 @@ class Post:
                 while i < len(posts) and not is_element_visible_in_viewpoint(posts[i]):
                     i = i + 1
                 if i + 1 <  len(posts):
-                    #The post at the i index is already 
+                    #The post at the i index is already scrapped
                     posts[i+1].location_once_scrolled_into_view
                 i = i + 1
         return None
-
+    
     def is_scrapped_Timeline(self):
         self.usertag = WebDriverWait(self.div, 5).until(EC.presence_of_element_located((By.XPATH,TimelinePage.usertag_relative_XPATH))).text
         return self.usertag in Post.blacklist_users
