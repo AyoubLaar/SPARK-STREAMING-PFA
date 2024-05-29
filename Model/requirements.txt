@@ -6,3 +6,5 @@ nltk
 scikit-learn
 wordcloud
 seaborn
+pydot
+pydotplus

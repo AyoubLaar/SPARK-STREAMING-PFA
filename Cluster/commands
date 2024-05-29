@@ -1,0 +1,14 @@
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.3 app.py
+kafka-topics.sh --list --bootstrap-server localhost:9092
+spark-submit --archives pyspark_venv.tar.gz#env --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.3,org.elasticsearch:elasticsearch-spark-30_2.12:8.0.0 app.py
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.3,org.elasticsearch:elasticsearch-spark-30_2.12:8.0.0 app.py
+tar -xvf my-env.tar.gz
+export SPARK_HOME=/opt/spark
+export PYSPARK_PYTHON=./env/bin/python
+echo $PYSPARK_PYTHON
+export PYSPARK_DRIVER_PYTHON=./env/bin/python
+export PYSPARK_DRIVER_PYTHON=/usr/local/bin/python
+export PYSPARK_DRIVER_PYTHON=""
+echo $PYSPARK_DRIVER_PYTHON
+
+/tmp/spark-d7676b56-0035-43de-9c5a-3e9f41de9368/pyspark_venv.tar.gz

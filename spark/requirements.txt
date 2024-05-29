@@ -1,5 +1,0 @@
-tensorflow
-tweet-preprocessor
-nltk
-pyspark
-kafka-python
